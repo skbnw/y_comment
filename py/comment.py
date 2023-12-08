@@ -13,7 +13,7 @@ def get_japan_time():
     return datetime.now(tokyo_timezone)
 
 # ニュースデータをスクレイプしてCSVに保存する関数
-def scrape_and_save_news(url, genre_en, genre_jp, folder_name):
+def scrape_and_save_news(url, genre_en, genre_jp, folder_name, scrape_datetime):
     try:
         response = requests.get(url)
         response.raise_for_status()
@@ -30,13 +30,13 @@ def scrape_and_save_news(url, genre_en, genre_jp, folder_name):
             comment = item.select_one('.newsFeed_item_comment').text.strip() if item.select_one('.newsFeed_item_comment') else 'N/A'
             comment = re.sub(r'件/時', '', comment)  # 「件/時」を削除
 
-            news_data.append([scrape_time.strftime('%Y-%m-%d-%H:%M'), genre_en, genre_jp, rank, media, title, comment, link, date])
+            news_data.append([scrape_datetime.strftime('%Y-%m-%d'), scrape_datetime.strftime('%H:%M'), genre_en, genre_jp, rank, media, title, comment, link, date])
 
         # CSVファイルに保存
         if not os.path.exists(folder_name):
             os.makedirs(folder_name)
-        filename = os.path.join(folder_name, f"{scrape_time.strftime('%Y_%m%d_%H%M')}_cmnt_{genre_en}.csv")
-        df = pd.DataFrame(news_data, columns=['scrape_time', 'genre_en', 'genre_jp', 'rank', 'media_jp', 'title', 'comment', 'link', 'date_original'])
+        filename = os.path.join(folder_name, f"{scrape_datetime.strftime('%Y_%m%d_%H%M')}_cmnt_{genre_en}.csv")
+        df = pd.DataFrame(news_data, columns=['scrp_date', 'scrp_time', 'genre_en', 'genre_jp', 'rank', 'media_jp', 'title', 'comment', 'link', 'date_original'])
         df.to_csv(filename, index=False)
         print(f"CSV file saved as {filename}")
 
@@ -64,5 +64,5 @@ folder_name = scrape_time.strftime('%Y_%m%d_cmnt')
 
 # 各ジャンルのニュースをスクレイプしてCSVに保存
 for genre_en, genre_jp, url in genres:
-    scrape_and_save_news(url, genre_en, genre_jp, folder_name)
+    scrape_and_save_news(url, genre_en, genre_jp, folder_name, scrape_time)
     time.sleep(3)  # 3秒間の休止
