@@ -30,7 +30,7 @@ def scrape_and_save_news(url, genre_en, genre_jp, folder_name):
             comment = item.select_one('.newsFeed_item_comment').text.strip() if item.select_one('.newsFeed_item_comment') else 'N/A'
             comment = re.sub(r'件/時', '', comment)  # 「件/時」を削除
 
-            news_data.append([scrape_time.strftime('%Y-%m-%d %H:%M'), genre_en, genre_jp, rank, media, title, comment, link, date])
+            news_data.append([scrape_time.strftime('%Y-%m-%d-%H:%M'), genre_en, genre_jp, rank, media, title, comment, link, date])
 
         # CSVファイルに保存
         if not os.path.exists(folder_name):
