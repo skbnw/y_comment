@@ -12,6 +12,7 @@ def get_japan_time():
     tokyo_timezone = pytz.timezone('Asia/Tokyo')
     return datetime.now(tokyo_timezone)
 
+
 # ニュースデータをスクレイプしてCSVに保存する関数
 def scrape_and_save_news(url, genre_en, genre_jp, folder_name, scrape_datetime):
     try:
