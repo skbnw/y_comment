@@ -24,7 +24,7 @@ def scrape_and_save_news(url, genre_en, genre_jp, folder_name, scrape_datetime):
         for item in news_items:
             rank_element = item.select_one('.newsFeed_item_rankNum')
             title_element = item.select_one('.newsFeed_item_title')
-            media_element = item.select_one('.newsFeed_item_media')
+            media_element = item.select_one('.sc-1hy2mez-2.bxHcLf')
             date_element = item.select_one('.newsFeed_item_date')
             link_element = item.select_one('.newsFeed_item_link')
             comment_element = item.select_one('.newsFeed_item_comment')
