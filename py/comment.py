@@ -22,21 +22,36 @@ def scrape_and_save_news(url, genre_en, genre_jp, folder_name, scrape_datetime):
         news_data = []
 
         for item in news_items:
-            rank = item.select_one('.newsFeed_item_rankNum').text.strip()
-            link = item.select_one('.newsFeed_item_link')['href']
-            title = item.select_one('.newsFeed_item_title').text.strip()
-            media = item.select_one('.newsFeed_item_media').text.strip()
-            date = item.select_one('.newsFeed_item_date').text.strip()
-            comment = item.select_one('.newsFeed_item_comment').text.strip() if item.select_one('.newsFeed_item_comment') else 'N/A'
+            rank_element = item.select_one('.newsFeed_item_rankNum')
+            title_element = item.select_one('.newsFeed_item_title')
+            media_element = item.select_one('.newsFeed_item_media')
+            date_element = item.select_one('.newsFeed_item_date')
+            link_element = item.select_one('.newsFeed_item_link')
+            comment_element = item.select_one('.newsFeed_item_comment')
+
+            rank = rank_element.text.strip() if rank_element else "No rank"
+            title = title_element.text.strip() if title_element else "No title"
+            media = media_element.text.strip() if media_element else "No media"
+            date = date_element.text.strip() if date_element else "No date"
+            link = link_element['href'] if link_element else "No link"
+            comment = comment_element.text.strip() if comment_element else "N/A"
             comment = re.sub(r'件/時', '', comment)  # 「件/時」を削除
 
-            news_data.append([scrape_datetime.strftime('%Y-%m-%d'), scrape_datetime.strftime('%H:%M'), genre_en, genre_jp, rank, media, title, comment, link, date])
+            news_data.append([
+                scrape_datetime.strftime('%Y-%m-%d'), 
+                scrape_datetime.strftime('%H:%M'), 
+                genre_en, genre_jp, 
+                rank, media, title, 
+                comment, link, date
+            ])
 
         # CSVファイルに保存
         if not os.path.exists(folder_name):
             os.makedirs(folder_name)
         filename = os.path.join(folder_name, f"{scrape_datetime.strftime('%Y_%m%d_%H%M')}_cmnt_{genre_en}.csv")
-        df = pd.DataFrame(news_data, columns=['scrp_date', 'scrp_time', 'genre_en', 'genre_jp', 'rank', 'media_jp', 'title', 'comment', 'link', 'date_original'])
+        df = pd.DataFrame(news_data, columns=[
+            'scrp_date', 'scrp_time', 'genre_en', 'genre_jp', 'rank', 'media_jp', 'title', 'comment', 'link', 'date_original'
+        ])
         df.to_csv(filename, index=False)
         print(f"CSV file saved as {filename}")
 
