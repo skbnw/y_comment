@@ -22,33 +22,46 @@ def scrape_and_save_news(url, genre_en, genre_jp, folder_name, scrape_datetime):
         news_items = soup.select('.newsFeed_item')
         news_data = []
 
-        for item in news_items:
-            rank_element = item.select_one('.newsFeed_item_rankNum')
-            title_element = item.select_one('.newsFeed_item_title')
-            media_element = item.select_one('.newsFeed_item_sub span')
-            date_element = item.select_one('.newsFeed_item_sub time')  # 修正点
+        for idx, item in enumerate(news_items):
+            rank_element = item.select_one('.sc-1hy2mez-8')  # ランク
+            title_element = item.select_one('.newsFeed_item_title')  # タイトル
+            media_element = item.select_one('.sc-1hy2mez-3')  # メディア名
+            date_element = item.select_one('.sc-1hy2mez-4')  # 日付
             link_element = item.select_one('.newsFeed_item_link')
-            comment_element = item.select_one('.newsFeed_item_comment')
+            comment_element = item.select_one('.sc-1hy2mez-6')  # コメント
 
+            # エラーメッセージの代わりにデフォルト値を使う
             if not rank_element:
-                raise ValueError("Rank element not found")
+                print(f"Warning: Rank element not found for item {idx} in {url}. Using default value 'N/A'.")
+                rank = "N/A"
+            else:
+                rank = rank_element.text.strip()
+            
             if not title_element:
-                raise ValueError("Title element not found")
-            if not media_element:
-                raise ValueError("Media element not found")
-            if not date_element:
-                raise ValueError("Date element not found")
-            if not link_element:
-                raise ValueError("Link element not found")
-
-            rank = rank_element.text.strip()
+                print(f"Warning: Title element not found for item {idx} in {url}. Skipping this item.")
+                continue  # タイトルがない場合はこのニュースをスキップ
             title = title_element.text.strip()
+
+            if not media_element:
+                print(f"Warning: Media element not found for item {idx} in {url}. Skipping this item.")
+                continue
             media = media_element.text.strip()
+
+            if not date_element:
+                print(f"Warning: Date element not found for item {idx} in {url}. Skipping this item.")
+                continue
             date = date_element.text.strip()
+
+            if not link_element:
+                print(f"Warning: Link element not found for item {idx} in {url}. Skipping this item.")
+                continue
             link = link_element['href']
+
+            # コメントがない場合は "N/A" をセット
             comment = comment_element.text.strip() if comment_element else "N/A"
             comment = re.sub(r'件/時', '', comment)  # 「件/時」を削除
 
+            # データリストに追加
             news_data.append([
                 scrape_datetime.strftime('%Y-%m-%d'), 
                 scrape_datetime.strftime('%H:%M'), 
@@ -58,21 +71,22 @@ def scrape_and_save_news(url, genre_en, genre_jp, folder_name, scrape_datetime):
             ])
 
         # CSVファイルに保存
-        if not os.path.exists(folder_name):
-            os.makedirs(folder_name)
-        filename = os.path.join(folder_name, f"{scrape_datetime.strftime('%Y_%m%d_%H%M')}_cmnt_{genre_en}.csv")
-        df = pd.DataFrame(news_data, columns=[
-            'scrp_date', 'scrp_time', 'genre_en', 'genre_jp', 'rank', 'media_jp', 'title', 'comment', 'link', 'date_original'
-        ])
-        df.to_csv(filename, index=False)
-        print(f"CSV file saved as {filename}")
+        if news_data:  # データがある場合のみ保存
+            if not os.path.exists(folder_name):
+                os.makedirs(folder_name)
+            filename = os.path.join(folder_name, f"{scrape_datetime.strftime('%Y_%m%d_%H%M')}_cmnt_{genre_en}.csv")
+            df = pd.DataFrame(news_data, columns=[
+                'scrp_date', 'scrp_time', 'genre_en', 'genre_jp', 'rank', 'media_jp', 'title', 'comment', 'link', 'date_original'
+            ])
+            df.to_csv(filename, index=False)
+            print(f"CSV file saved as {filename}")
+        else:
+            print(f"No data to save for {genre_en} at {url}")
 
     except requests.RequestException as e:
-        print(f"Error: {e}")
-        raise
+        print(f"Error fetching {url}: {e}")
     except Exception as e:
-        print(f"Scraping error: {e}")
-        raise
+        print(f"Scraping error at {url}: {e}")
 
 # URLとジャンルのリスト
 genres = [
