@@ -86,4 +86,25 @@ genres = [
     ("TTL", "総合", "https://news.yahoo.co.jp/ranking/comment"),
     ("domestic", "国内", "https://news.yahoo.co.jp/ranking/comment/domestic"),
     ("world", "国際", "https://news.yahoo.co.jp/ranking/comment/world"),
-    ("business", "経済",
+    ("business", "経済", "https://news.yahoo.co.jp/ranking/comment/business"),
+    ("entertainment", "エンタメ", "https://news.yahoo.co.jp/ranking/comment/entertainment"),
+    ("sports", "スポーツ", "https://news.yahoo.co.jp/ranking/comment/sports"),
+    ("it-science", "IT・科学", "https://news.yahoo.co.jp/ranking/comment/it-science"),
+    ("life", "ライフ", "https://news.yahoo.co.jp/ranking/comment/life"),
+    ("local", "地域", "https://news.yahoo.co.jp/ranking/comment/local")
+]
+
+# スクレイプ実行時間（日本時間）
+scrape_time = get_japan_time()
+
+# 保存先フォルダ名（日本時間の年月日）
+folder_name = scrape_time.strftime('%Y_%m%d_cmnt')
+
+# 各ジャンルのニュースをスクレイプしてCSVに保存
+try:
+    for genre_en, genre_jp, url in genres:
+        scrape_and_save_news(url, genre_en, genre_jp, folder_name, scrape_time)
+        time.sleep(3)  # 3秒間の休止
+except Exception as e:
+    print(f"Process stopped due to error: {e}")
+    exit(1)
