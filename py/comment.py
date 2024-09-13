@@ -27,35 +27,27 @@ def scrape_and_save_news(url, genre_en, genre_jp, folder_name, scrape_datetime):
             title_element = item.select_one('.newsFeed_item_title')  # タイトル
             media_element = item.select_one('.sc-1hy2mez-3')  # メディア名
             date_element = item.select_one('.sc-1hy2mez-4')  # 日付
-            link_element = item.select_one('.newsFeed_item_link')
+            link_element = item.select_one('.newsFeed_item_link')  # リンク
             comment_element = item.select_one('.sc-1hy2mez-6')  # コメント
 
-            # エラーメッセージの代わりにデフォルト値を使う
+            # エラーメッセージを出してスクリプトを停止させる
             if not rank_element:
-                print(f"Warning: Rank element not found for item {idx} in {url}. Using default value 'N/A'.")
-                rank = "N/A"
-            else:
-                rank = rank_element.text.strip()
-            
+                raise ValueError(f"Rank element not found for item {idx} in {url}.")
             if not title_element:
-                print(f"Warning: Title element not found for item {idx} in {url}. Skipping this item.")
-                continue  # タイトルがない場合はこのニュースをスキップ
-            title = title_element.text.strip()
-
+                raise ValueError(f"Title element not found for item {idx} in {url}.")
             if not media_element:
-                print(f"Warning: Media element not found for item {idx} in {url}. Skipping this item.")
-                continue
-            media = media_element.text.strip()
-
+                raise ValueError(f"Media element not found for item {idx} in {url}.")
             if not date_element:
-                print(f"Warning: Date element not found for item {idx} in {url}. Skipping this item.")
-                continue
-            date = date_element.text.strip()
-
+                raise ValueError(f"Date element not found for item {idx} in {url}.")
             if not link_element:
-                print(f"Warning: Link element not found for item {idx} in {url}. Skipping this item.")
-                continue
-            link = link_element['href']
+                raise ValueError(f"Link element not found for item {idx} in {url}.")
+            
+            # 各要素のテキストを取得
+            rank = rank_element.text.strip()
+            title = title_element.text.strip()
+            media = media_element.text.strip()
+            date = date_element.text.strip()
+            link = link_element['href'].strip()
 
             # コメントがない場合は "N/A" をセット
             comment = comment_element.text.strip() if comment_element else "N/A"
@@ -87,31 +79,11 @@ def scrape_and_save_news(url, genre_en, genre_jp, folder_name, scrape_datetime):
         print(f"Error fetching {url}: {e}")
     except Exception as e:
         print(f"Scraping error at {url}: {e}")
+        raise  # エラーが発生したら再度エラーを発生させてスクリプトを停止
 
 # URLとジャンルのリスト
 genres = [
     ("TTL", "総合", "https://news.yahoo.co.jp/ranking/comment"),
     ("domestic", "国内", "https://news.yahoo.co.jp/ranking/comment/domestic"),
     ("world", "国際", "https://news.yahoo.co.jp/ranking/comment/world"),
-    ("business", "経済", "https://news.yahoo.co.jp/ranking/comment/business"),
-    ("entertainment", "エンタメ", "https://news.yahoo.co.jp/ranking/comment/entertainment"),
-    ("sports", "スポーツ", "https://news.yahoo.co.jp/ranking/comment/sports"),
-    ("it-science", "IT・科学", "https://news.yahoo.co.jp/ranking/comment/it-science"),
-    ("life", "ライフ", "https://news.yahoo.co.jp/ranking/comment/life"),
-    ("local", "地域", "https://news.yahoo.co.jp/ranking/comment/local")
-]
-
-# スクレイプ実行時間（日本時間）
-scrape_time = get_japan_time()
-
-# 保存先フォルダ名（日本時間の年月日）
-folder_name = scrape_time.strftime('%Y_%m%d_cmnt')
-
-# 各ジャンルのニュースをスクレイプしてCSVに保存
-try:
-    for genre_en, genre_jp, url in genres:
-        scrape_and_save_news(url, genre_en, genre_jp, folder_name, scrape_time)
-        time.sleep(3)  # 3秒間の休止
-except Exception as e:
-    print(f"Process stopped due to error: {e}")
-    exit(1)
+    ("business", "経済",
