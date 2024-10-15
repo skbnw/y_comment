@@ -24,7 +24,7 @@ def scrape_and_save_news(url, genre_en, genre_jp, folder_name, scrape_datetime):
 
         for idx, item in enumerate(news_items):
             rank_element = item.select_one('.sc-1hy2mez-8')  # ランク
-            title_element = item.select_one('.newsFeed_item_title')  # タイトル
+            title_element = item.select_one('.sc-3ls169-0.dHAJpi')  # タイトル
             media_element = item.select_one('.sc-1hy2mez-3')  # メディア名
             date_element = item.select_one('.sc-1hy2mez-4')  # 日付
             link_element = item.select_one('.newsFeed_item_link')  # リンク
