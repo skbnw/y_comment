@@ -12,18 +12,22 @@ def get_japan_time():
     tokyo_timezone = pytz.timezone('Asia/Tokyo')
     return datetime.now(tokyo_timezone)
 
-# ニュースデータをスクレイプしてCSVに保存する関数
 def scrape_and_save_news(url, genre_en, genre_jp, folder_name, scrape_datetime):
     try:
         response = requests.get(url)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
-        news_items = soup.select('li')  # ニュースアイテムを取得
+        news_items = soup.select('li[data-ual-view-type="list"]')  # ニュースアイテムを取得
+
+        if not news_items:
+            print("No news items found. Check the HTML structure.")
+            return
+
         news_data = []
 
         for idx, item in enumerate(news_items):
-            # 必要な要素を取得
-            rank_element = item.select_one('.sc-1gg21n8-0.sc-1hy2mez-8')  # ランク
+            # 各要素を取得
+            rank_element = item.select_one('.sc-1hy2mez-11')  # ランク
             title_element = item.select_one('.sc-3ls169-0.dHAJpi')  # タイトル
             media_element = item.select_one('.sc-1hy2mez-3')  # メディア名
             date_element = item.select_one('time')  # 日付
@@ -32,24 +36,15 @@ def scrape_and_save_news(url, genre_en, genre_jp, folder_name, scrape_datetime):
 
             # 各要素が存在するか確認
             if not rank_element:
-                raise ValueError(f"Rank element not found for item {idx} in {url}.")
-            if not title_element:
-                raise ValueError(f"Title element not found for item {idx} in {url}.")
-            if not media_element:
-                raise ValueError(f"Media element not found for item {idx} in {url}.")
-            if not date_element:
-                raise ValueError(f"Date element not found for item {idx} in {url}.")
-            if not link_element:
-                raise ValueError(f"Link element not found for item {idx} in {url}.")
+                print(f"Rank element not found for item {idx}. Skipping.")
+                continue
 
             # 各要素のテキストを取得
             rank = rank_element.get_text(strip=True)
-            title = title_element.get_text(strip=True)
-            media = media_element.get_text(strip=True)
-            date = date_element.get_text(strip=True)
-            link = link_element['href'].strip()
-
-            # コメントがない場合は "N/A" をセット
+            title = title_element.get_text(strip=True) if title_element else "N/A"
+            media = media_element.get_text(strip=True) if media_element else "N/A"
+            date = date_element.get_text(strip=True) if date_element else "N/A"
+            link = link_element['href'].strip() if link_element else "N/A"
             comment = comment_element.get_text(strip=True) if comment_element else "N/A"
             comment = re.sub(r'件/時', '', comment)  # 「件/時」を削除
 
@@ -63,7 +58,7 @@ def scrape_and_save_news(url, genre_en, genre_jp, folder_name, scrape_datetime):
             ])
 
         # CSVファイルに保存
-        if news_data:  # データがある場合のみ保存
+        if news_data:
             if not os.path.exists(folder_name):
                 os.makedirs(folder_name)
             filename = os.path.join(folder_name, f"{scrape_datetime.strftime('%Y_%m%d_%H%M')}_cmnt_{genre_en}.csv")
@@ -79,7 +74,8 @@ def scrape_and_save_news(url, genre_en, genre_jp, folder_name, scrape_datetime):
         print(f"Error fetching {url}: {e}")
     except Exception as e:
         print(f"Scraping error at {url}: {e}")
-        raise  # エラーが発生したら再度エラーを発生させてスクリプトを停止
+        raise
+
 
 # URLとジャンルのリスト
 genres = [
